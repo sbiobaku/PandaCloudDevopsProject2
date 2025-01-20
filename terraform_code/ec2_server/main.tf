@@ -133,11 +133,18 @@ resource "aws_security_group" "my-sg" {
   }
 }
 
+# STEP1.5: CREATE KEY_PAIR
+resource "aws_key_pair" "key" {
+  key_name   = "key_aws"
+  public_key = file("~/.ssh/id_rsa.pub")
+}
+
 # STEP2: CREATE EC2 USING PEM & SG
 resource "aws_instance" "my-ec2" {
   ami           = var.ami   
   instance_type = var.instance_type
-  key_name      = var.key_name        
+  #key_name      = var.key_name 
+  key_name = aws_key_pair.key.key_name      
   vpc_security_group_ids = [aws_security_group.my-sg.id]
   
   root_block_device {
@@ -153,7 +160,8 @@ resource "aws_instance" "my-ec2" {
     # ESTABLISHING SSH CONNECTION WITH EC2
     connection {
       type        = "ssh"
-      private_key = file("./key.pem") # replace with your key-name 
+      #private_key = file("./key.pem") # replace with your key-name 
+      private_key = file("~/.ssh/id_rsa")
       user        = "ubuntu"
       host        = self.public_ip
     }
